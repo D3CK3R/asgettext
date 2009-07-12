@@ -1,8 +1,12 @@
-#summary One-sentence summary of this page.
+#summary How to settup asgettext on your machine.
 
-= Introduction =
+= Requirements =
 
-Add your content here.
+For running asgettext you need the following programs installed on your machine:
+  * [http://www.gnu.org/software/gettext/ gnu-gettext] for extracting the translation strings
+  * [http://www.ruby-lang.org/ ruby] for running the script
+
+
 
 
 = Details =
