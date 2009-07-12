@@ -5,13 +5,26 @@
 For running asgettext you need the following programs installed on your machine:
   * [http://www.gnu.org/software/gettext/ gnu-gettext] for extracting the translation strings
   * [http://www.ruby-lang.org/ ruby] for running the script
+  * A shell / terminal
 
+Furthermore you may want to have an editor for the translation Files. A common multiplatform editor is [http://www.poedit.net/ poedit]
+  * [http://userbase.kde.org/Lokalize Lokalize] (Unix KDE, intended to replace KBabel)
+  * [http://i18n.kde.org/tools/kbabel/ KBabel] (Unix KDE)
+  * [http://gtranslator.sourceforge.net/ GTranslator] (Unix Gnome)
+  * [http://www.poedit.net/ poEdit] (Multiplatform)
+  * [http://www.gnu.org/software/emacs/emacs.html Emacs] with po-mode (Multiplatform)
+  * [http://www.vim.org/ Vim] with PO [http://www.vim.org/scripts/script.php?script_id=695 plug-in] (Multiplatform) 
 
+== Linux ==
+On Linux the gettext package usually is already installed. If not use your package manager look out for "xgettext" or "gettext" and install it.
 
+== Mac ==
+Gettext has to be installed manually. It does not ship with XCode, so you have to use [http://www.finkproject.org/ Fink] or [http://www.macports.org/ Macports].
+For Macports you simply type
+{{sudo port install gettext}}
+in your terminal to install the gettext package.
 
-= Details =
+For further details check this [http://blog.doughellmann.com/2009/06/installing-gnu-gettext-for-use-with.html blog entry], describing most of the details to install the gettext.
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+== Windows ==
+TO BE FILLED OUT
