@@ -1,6 +1,6 @@
 #summary An example of how to run asgettext for extracting translation strings
 
- # {{{cd}}} to your flex source folder
+ # {{{cd}}} to your flex source folder
 {{{
 cd flex_workspace/myProject
 }}}
