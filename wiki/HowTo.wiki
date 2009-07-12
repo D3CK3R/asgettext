@@ -23,4 +23,4 @@ asgettext update
 {{{
 asgettext compile
 }}}
-  Now you have your compiled mo-files in {{{translation/locale/LANGUAGE/LC_MESSAGES/messages.mo}}}
+Now you have your compiled mo-files in {{{translation/locale/LANGUAGE/LC_MESSAGES/messages.mo}}}
