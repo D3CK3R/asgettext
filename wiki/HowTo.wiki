@@ -4,3 +4,23 @@
 {{{
 cd flex_workspace/myProject
 }}}
+ 
+ # Initialize the translation directory
+{{{
+asgettext init
+}}}
+
+ # Add a language to translate. "en" is installed by default.
+{{{
+asgettext add de
+}}}
+ 
+ # Extract the translation strings and update all translation files
+{{{
+asgettext update
+}}}
+
+ # Compile the translation files to mo files for distribution
+{{{
+asgettext compile
+}}}
