@@ -1,4 +1,5 @@
 #summary An example of how to run asgettext for extracting translation strings
-
-<code>cd</code> to your flex source folder
-{{{cd flex_workspace/myProject}}}
+{{{cd}}} to your flex source folder
+{{{
+cd flex_workspace/myProject
+}}}
