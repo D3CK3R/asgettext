@@ -44,10 +44,13 @@ class ToGettext
         outputFile      = self.dest+"messages.po"
 
         # run gettext
-        puts system("xgettext --extract-all --force-po --language=Python --no-wrap --output=%s --files-from=%s"%[outputFile, gettextFileList])
-        File.delete gettextFileList
-        
+        puts system("xgettext --extract-all --force-po --from-code=utf-8 --language=Python --no-wrap --output=%s --files-from=%s"%[outputFile, gettextFileList])
+            
+        # make sure we enforce UFT-8!
+        # TODO
+
         # cleanup tmp files
+        File.delete gettextFileList
         tmpFiles.each { |file|
             File.delete(file)
         }
