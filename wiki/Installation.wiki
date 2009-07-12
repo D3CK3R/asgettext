@@ -6,6 +6,7 @@ For running asgettext you need the following programs installed on your machine:
   * [http://www.gnu.org/software/gettext/ gnu-gettext] for extracting the translation strings
   * [http://www.ruby-lang.org/ ruby] for running the script
   * A shell / terminal
+  * For using gettext in Flex you need the [http://www.sephiroth.it/phpwiki/index.php?title=Gettext_actionscript3 Gettext classes from sephiroth].
 
 Furthermore you may want to have an editor for the translation Files. A common multiplatform editor is [http://www.poedit.net/ poedit].
   * [http://userbase.kde.org/Lokalize Lokalize] (Unix KDE, intended to replace KBabel)
