@@ -10,6 +10,7 @@ cd flex_workspace/myProject
 {{{
 asgettext init
 }}}
+ if {{{asgettext}}} is not found here, either make sure it is in your [http://www.cs.purdue.edu/homes/cs541/unix_path.html PATH], or copy it directly into the flex project location.
  # Add a language to translate. "en" is installed by default.
 {{{
 asgettext add de
