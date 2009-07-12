@@ -9,19 +9,17 @@ class ToGettext
         # create new .po file
         self.update_po
         self.update_translation_pot
-        # merge changes with all translation files
-        srcFile = self.dest+"messages.po"
-        Dir[self.dest+"locale/**/messages.pot"].each { |potFile|
-            exec("msgmerge --update --no-wrap --backup=numbered %s %s"%[potFile])
-        }
     end
 
     def update_po
         tmpFiles = []
-        
+        if ARGV.length == 0
+            ARGV[0] = "as"
+            ARGV[1] = "mxml"
+        end
         # create intermediate files for parsing with gettext
         ARGV.each { |fileType|
-            Dir['**/*.'+fileType].each { |path|
+            Dir[@dest+'/src/**/*.'+fileType].each { |path|
                 infile = File.new(path, 'r')
                 outfile = File.new(path+".pox", 'w')
                 tmpFiles.push path+".pox"
@@ -46,8 +44,8 @@ class ToGettext
         outputFile      = self.dest+"messages.po"
 
         # run gettext
-        puts exec("xgettext -a --force-po -L Python --from-code=UTF-8 --no-wrap --output=%s --files-from=%s"%[outputFile, gettextFileList])
-        File.delete("gettext_input.list")
+        puts system("xgettext --extract-all --force-po --language=Python --no-wrap --output=%s --files-from=%s"%[outputFile, gettextFileList])
+        File.delete gettextFileList
         
         # cleanup tmp files
         tmpFiles.each { |file|
@@ -66,15 +64,17 @@ class ToGettext
                 File.copy(srcFile, destFile)
             end
             # merge the changes in messages.po to the pot translator file
-            exec("msgmerge --backup=numbered --no-wrap %s %s"%[destFile, srcFile])
+            system("msgmerge --force-po --update --backup=numbered --no-wrap %s %s"%[destFile, srcFile])
         }
     end
- 
+
+    def po_exists?
+        return File.exist?(self.dest+"messages.po")
+    end
 
     # =============================================================================
     
     def init
-        self.check_4_src_dir
         self.create_dir_if_not_exist self.dest+"/translation"
         self.create_dir_if_not_exist self.dest+"locale"
         if not File.exist? self.dest+"locale/en"
@@ -95,7 +95,7 @@ class ToGettext
             puts "This not a valid flex / actionscript project folder"
             puts "   'src' Folder doesn't exist"
             puts "    - use the '- d' option to specify another destination folder"
-            puts "    - chane to a flex-project folder and execute the script there"
+            puts "    - chane to a flex-project folder and systemute the script there"
             help
         end 
     end
@@ -132,15 +132,15 @@ class ToGettext
     # =============================================================================
     
     def compile
-        Dir[self.dest+"translation/locale/*/MESSAGES_LC/message.po"].each { |file|
-            exec("msgfmt %s"%file)
+        Dir[self.dest+"locale/**/messages.pot"].each { |file|
+            outputFile = File.dirname(file) + "/messages.mo"
+            system("msgfmt --strict --use-fuzzy --output=%s %s" % [outputFile, file])
         }
     end
 
     # =============================================================================
     
     def add
-        self.check_4_src_dir
         if ARGV.length == 0
             puts "No language provided. \n use: togettext help"
             help
@@ -165,7 +165,7 @@ class ToGettext
         self.create_dir_if_not_exist self.dest+"locale/"+lang+"/LC_MESSAGES"
         inputFile  = self.dest+"messages.po"
         outputFile = self.dest+"locale/"+lang+"/LC_MESSAGES/messages.pot"
-        exec("msginit --no-wrap --input=%s --output=%s"%[inputFile, outputFile])
+        system("msginit --no-wrap --input=%s --output=%s"%[inputFile, outputFile])
     end
 
     # =============================================================================
@@ -193,6 +193,8 @@ class ToGettext
     # ============================================================================
     def run
         self.check_for_gettext
+        self.check_4_src_dir
+        
         $subcommands = [
             :help,
             :init,
