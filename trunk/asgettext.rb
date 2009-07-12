@@ -5,8 +5,7 @@ require 'pathname'
 class ToGettext
     
     def update
-        self.check_4_src_dir
-        # create new .po file
+        # create / update new root .po file
         self.update_po
         self.update_translation_pot
     end
@@ -24,10 +23,8 @@ class ToGettext
                 outfile = File.new(path+".pox", 'w')
                 tmpFiles.push path+".pox"
                 infile.each { |line|
-                    # feed the mxml comments
-                    #if line =~ /\{(.*?_\(.*?\)).*?\}/
-                    #    puts $~[1]
                     # feed a normal assignment
+                    # TODO add parenthesis counting check here
                     if line =~ /(_\(.*?\))/
                         outfile.puts $~[1]
                     end
@@ -41,9 +38,9 @@ class ToGettext
         gettext         = File.new(gettextFileList, 'w')
         tmpFiles.each { |path| gettext.puts path }
         gettext.close
-        outputFile      = self.dest+"messages.po"
 
         # run gettext
+        outputFile      = self.dest+"messages.po"
         puts system("xgettext --extract-all --force-po --from-code=utf-8 --language=Python --no-wrap --output=%s --files-from=%s"%[outputFile, gettextFileList])
             
         # make sure we enforce UFT-8!
@@ -175,7 +172,7 @@ class ToGettext
     
     def help
         puts
-        version
+        self.version
         if ARGV.length == 0
             puts
             puts "    Type 'help <subcommand>' for help on a specific subcommand" 
@@ -183,6 +180,7 @@ class ToGettext
             puts "    Available sucommands:"
             $subcommands.each { |symbol| puts " "*8+symbol.to_s }
         end
+        # TODO add help comments
         exit
     end
     
@@ -197,17 +195,15 @@ class ToGettext
     def run
         self.check_for_gettext
         self.check_4_src_dir
-        
-        $subcommands = [
+        @subcommands = [
             :help,
             :init,
             :update,
             :add,
             :compile
         ]
-        
         command =  ARGV.shift
-        $subcommands.each{ |symbol|
+        @subcommands.each{ |symbol|
             if symbol.to_s == command
                 self.method(symbol).call
                 exit
