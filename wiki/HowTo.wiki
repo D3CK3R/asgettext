@@ -1,5 +1,7 @@
 #summary An example of how to run asgettext for extracting translation strings
 
+This is a short demo how to create gettext translation files for an existing Flex project.
+
  # {{{cd}}} to your flex source folder
 {{{
 cd flex_workspace/myProject
@@ -16,6 +18,7 @@ asgettext add de
 {{{
 asgettext update
 }}}
+ # Edit the translation files in {{{translation/locale/LANGUAGE/LC_MESSAGES/messages.pot}}} using an editor of your choice (see [Requirements] for more details)
  # Compile the translation files to mo files for distribution
 {{{
 asgettext compile
