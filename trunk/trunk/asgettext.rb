@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'pathname'
+require 'ftools'
 
 class ToGettext
     
@@ -41,7 +42,7 @@ class ToGettext
 
         # run gettext
         outputFile      = self.dest+"messages.po"
-        puts system("xgettext --extract-all --force-po --from-code=utf-8 --language=Python --no-wrap --output=%s --files-from=%s"%[outputFile, gettextFileList])
+        system("xgettext --extract-all --force-po --from-code=utf-8 --language=Python --no-wrap --output=%s --files-from=%s"%[outputFile, gettextFileList])
             
         # make sure we enforce UFT-8!
         # TODO
@@ -61,7 +62,7 @@ class ToGettext
             destFile = path+"messages.pot"
             srcFile  = self.dest+"messages.po"
             if not File.exist? path+"messages.pot"
-                File.copy(srcFile, destFile)
+                self.create_translation_pot( path..match(/.*?\/locale\/([a-z_]{2})\/.*/)[1] )
             end
             # merge the changes in messages.po to the pot translator file
             system("msgmerge --force-po --update --backup=numbered --no-wrap %s %s"%[destFile, srcFile])
@@ -163,6 +164,10 @@ class ToGettext
         end
         self.create_dir_if_not_exist self.dest+"locale/"+lang
         self.create_dir_if_not_exist self.dest+"locale/"+lang+"/LC_MESSAGES"
+        self.create_translation_pot lang
+    end
+
+    def create_translation_pot(lang)
         inputFile  = self.dest+"messages.po"
         outputFile = self.dest+"locale/"+lang+"/LC_MESSAGES/messages.pot"
         system("msginit --no-wrap --input=%s --output=%s"%[inputFile, outputFile])
