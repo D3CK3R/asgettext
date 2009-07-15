@@ -27,4 +27,4 @@ asgettext compile
  Now you have your compiled mo-files in {{{translation/locale/LANGUAGE/LC_MESSAGES/messages.mo}}}
 
 
-To use these mo files from within Flex use the [http://www.sephiroth.it/phpwiki/index.php?title=Gettext_actionscript3 Gettext classes from sephiroth].
+To use these mo files from within Flex use the [http://www.sephiroth.it/phpwiki/index.php?title=Gettext_actionscript3 Gettext classes from sephiroth] or from [http://code.google.com/p/gettext-for-flash/ gettext-for-flash].
