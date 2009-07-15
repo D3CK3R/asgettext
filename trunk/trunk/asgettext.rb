@@ -2,8 +2,21 @@
 
 require 'pathname'
 require 'ftools'
+require "open3"
 
 class ToGettext
+    
+    def initialize
+        @subcommands = [
+            :help,
+            :init,
+            :update,
+            :add,
+            :compile
+        ]
+    end
+
+    # ========================================================================
     
     def update
         # create / update new root .po file
@@ -26,6 +39,7 @@ class ToGettext
                 infile.each { |line|
                     # feed a normal assignment
                     # TODO add parenthesis counting check here
+                    # TODO add multiple matches per line
                     if line =~ /(_\(.*?\))/
                         outfile.puts $~[1]
                     end
@@ -95,9 +109,9 @@ class ToGettext
         if not Dir['*'].member? 'src'
             puts "This not a valid flex / actionscript project folder"
             puts "   'src' Folder doesn't exist"
-            puts "    - use the '- d' option to specify another destination folder"
+            puts "    - use the '--dest' option to specify another destination folder"
             puts "    - chane to a flex-project folder and systemute the script there"
-            help
+            self.help_stop
         end 
     end
 
@@ -123,10 +137,10 @@ class ToGettext
     def check_dest_dir
         if not File.exist? self.dest
             puts "Folder '%s' doesn't exist!" % self.dest
-            self.help
+            self.help_stop
         elsif not File.directory? self.dest
             puts "Given destination '%s' is a file not a folder!" % self.dest
-            self.help
+            self.help_stop
         end
     end
 
@@ -144,23 +158,23 @@ class ToGettext
     def add
         if ARGV.length == 0
             puts "No language provided. \n use: togettext help"
-            help
+            self.help_stop
         elsif ARGV[0].length > 2
             puts "'%s' is not a valid language identifier!" % ARGV[0]
-            help
+            self.help_stop
         end
         self.create_translation_dir ARGV[0]
         if not self.po_exists?
             puts "messages.po doesn't exist yet!"
             puts "use 'togettext update' to update the messages.po and the translation files"
-            help
+            self.help_stop
         end
     end
 
     def create_translation_dir(lang)
         if File.exist? self.dest+"locale/"+lang
             puts "Translation for language='%s' exists already!"%lang
-            self.help
+            self.help_stop
         end
         self.create_dir_if_not_exist self.dest+"locale/"+lang
         self.create_dir_if_not_exist self.dest+"locale/"+lang+"/LC_MESSAGES"
@@ -175,15 +189,19 @@ class ToGettext
 
     # =============================================================================
     
+    def help_stop
+        puts "Use 'help <subcommand>' for help on a specific subcommand" 
+        exit
+    end
+
     def help
-        puts
-        self.version
+        #self.version
         if ARGV.length == 0
             puts
-            puts "    Type 'help <subcommand>' for help on a specific subcommand" 
+            puts "    Use 'help <subcommand>' for help on a specific subcommand" 
             puts
             puts "    Available sucommands:"
-            $subcommands.each { |symbol| puts " "*8+symbol.to_s }
+            @subcommands.each { |symbol| puts " "*8+symbol.to_s }
         end
         # TODO add help comments
         exit
@@ -192,7 +210,7 @@ class ToGettext
     # =============================================================================
     
     def version
-        puts "togettext a little translation helper for flex apps"
+        puts "asgettext a little translation helper for flex apps"
     end
     
     
@@ -200,13 +218,6 @@ class ToGettext
     def run
         self.check_for_gettext
         self.check_4_src_dir
-        @subcommands = [
-            :help,
-            :init,
-            :update,
-            :add,
-            :compile
-        ]
         command =  ARGV.shift
         @subcommands.each{ |symbol|
             if symbol.to_s == command
@@ -221,7 +232,23 @@ class ToGettext
     end
 
     def check_for_gettext
-        
+        ['xgettext', 'msginit', 'msgfmt', 'msgmerge'].each{ |command|
+            Open3.popen3(command+' --help') { |stdin, stdout, stderr|
+                if stderr.read.length > 0
+                    puts "Your gettext installation is incomplete: '%s' is missing"%command
+                    puts "Download an install gettext:"
+                    if RUBY_PLATFORM.include? "linux"
+                        puts "    sudo apt-get install gettext"
+                    elsif RUBY_PLATFORM.include? "darwin"
+                        puts "    get macports from www.macports.org"
+                        puts "    then open Terminal.app and type: sudo port install gettext"
+                    else
+                        puts "    go to ftp://ftp.gnu.org/gnu/gettext/ and look for *.woe32.zip"  
+                    end
+                    exit
+                end
+            }
+        }
     end
 end
 
