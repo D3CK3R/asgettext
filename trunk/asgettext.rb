@@ -7,12 +7,23 @@ require "open3"
 class ToGettext
     
     def initialize
-        @subcommands = [
-            :help,
-            :init,
-            :update,
-            :add,
-            :compile
+        @subcommands = Hash[
+            :help,    Hash[:inline, "help [<subcommand>]  display help about a subcommand or this overview",
+                           :help, "displays a help dialog"],
+            :init,    Hash[:inline, "init                 initialize the project structure",
+                           :help, "Creates the directory structure needed for running gettext.\n"+
+                                  "The created directories are ./translation/{locale, translation}.\n"+
+                                  "Usually you want to update the translation files using update so directly\n"+
+                                  "type \"asgettext.rb init update\""],
+            :update,  Hash[:inline, "update               the translation strings",
+                           :help, "Syncs the existing translation files with the sources.\n"+
+                                  "Usually you want to compile again, so type directly \"asgettext.rb update compile\""],
+            :add,     Hash[:inline, "add <lang>           add a new translation language",
+                           :help, "Add a new language. Creates the needed ddirectory structure.\n"+
+                                  "<lang> is a two letter language code."],
+            :compile, Hash[:inline, "compile             create the binaries ready for distribution",
+                           :help, "Creates the .mo files from all the .pot files. That is what you finally will\n"+
+                                  "distribute on your server."] 
         ]
     end
 
@@ -76,7 +87,7 @@ class ToGettext
             destFile = path+"messages.pot"
             srcFile  = self.dest+"messages.po"
             if not File.exist? path+"messages.pot"
-                self.create_translation_pot( path..match(/.*?\/locale\/([a-z_]{2})\/.*/)[1] )
+                self.create_translation_pot( path.match(/.*?\/locale\/([a-z_]{2})\/.*/)[1] )
             end
             # merge the changes in messages.po to the pot translator file
             system("msgmerge --force-po --update --backup=numbered --no-wrap %s %s"%[destFile, srcFile])
@@ -99,7 +110,7 @@ class ToGettext
 
     def create_dir_if_not_exist(path)
         if not File.exist? path
-            Dir.mkdir path
+            `mkdir -p #{path}`
         end
     end
 
@@ -197,14 +208,19 @@ class ToGettext
     def help
         #self.version
         if ARGV.length == 0
-            puts
-            puts "    Use 'help <subcommand>' for help on a specific subcommand" 
-            puts
-            puts "    Available sucommands:"
-            @subcommands.each { |symbol| puts " "*8+symbol.to_s }
+            puts "Use 'help <subcommand>' for help on a specific subcommand" 
+            puts "Available sucommands:"
+            @subcommands.each_pair { |symbol,desc| 
+                puts "#{" "*4} #{desc[:inline]}" 
+            }
+        elsif @subcommands.has_key? ARGV[0].intern
+            @subcommands[ARGV[0].intern][:help].split("\n").each { |line|
+                puts " "*4+line
+            }
+        else
+            puts "Unknown help topic \"#{ARGV.shift}\""
+            self.help
         end
-        # TODO add help comments
-        exit
     end
     
     # =============================================================================
@@ -219,15 +235,15 @@ class ToGettext
         self.check_for_gettext
         self.check_4_src_dir
         command =  ARGV.shift
-        @subcommands.each{ |symbol|
+        # explicitely loop here to allow something like "update compile"
+        @subcommands.keys.each{ |symbol|
             if symbol.to_s == command
                 self.method(symbol).call
                 exit
             end
         }
         # otherwise call the help
-        puts "Unknown sucommand "+command.to_s
-        puts 
+        puts "Unknown subcommand \"#{command.to_s}\"."
         self.help
     end
 
