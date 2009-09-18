@@ -9,21 +9,28 @@ class ToGettext
     def initialize
         @subcommands = Hash[
             :help,    Hash[:inline, "help [<subcommand>]  display help about a subcommand or this overview",
-                           :help, "displays a help dialog"],
+                           :help,   "displays a help dialog"],
+            
             :init,    Hash[:inline, "init                 initialize the project structure",
-                           :help, "Creates the directory structure needed for running gettext.\n"+
-                                  "The created directories are ./translation/{locale, translation}.\n"+
-                                  "Usually you want to update the translation files using update so directly\n"+
-                                  "type \"asgettext.rb init update\""],
+                           :help,   "Creates the directory structure needed for running gettext.\n"+
+                                    "The created directories are ./translation/{locale, translation}.\n"+
+                                    "Usually you want to update the translation files using update so directly\n"+
+                                    "type \"asgettext.rb init update\""],
+            
             :update,  Hash[:inline, "update               the translation strings",
-                           :help, "Syncs the existing translation files with the sources.\n"+
-                                  "Usually you want to compile again, so type directly \"asgettext.rb update compile\""],
+                           :help,   "Syncs the existing translation files with the sources.\n"+
+                                    "Usually you want to compile again, so type directly \"asgettext.rb update compile\""],
+            
             :add,     Hash[:inline, "add <lang>           add a new translation language",
-                           :help, "Add a new language. Creates the needed ddirectory structure.\n"+
-                                  "<lang> is a two letter language code."],
+                           :help,   "Add a new language. Creates the needed ddirectory structure.\n"+
+                                    "<lang> is a two letter language code."],
+            
             :compile, Hash[:inline, "compile             create the binaries ready for distribution",
-                           :help, "Creates the .mo files from all the .pot files. That is what you finally will\n"+
-                                  "distribute on your server."] 
+                           :help,   "Creates the .mo files from all the .pot files. That is what you finally will\n"+
+                                    "distribute on your server."],
+            
+            :translate,Hash[:inline,"translate <lang>    auto translate using google",
+                            :help,  "Translates the .po file for the given language using "]
         ]
     end
 
@@ -169,10 +176,10 @@ class ToGettext
     def add
         if ARGV.length == 0
             puts "No language provided. \n use: togettext help"
-            self.help_stop
+            self.help_stop(:add)
         elsif ARGV[0].length > 2
             puts "'%s' is not a valid language identifier!" % ARGV[0]
-            self.help_stop
+            self.help_stop(:add)
         end
         self.create_translation_dir ARGV[0]
         if not self.po_exists?
@@ -200,8 +207,21 @@ class ToGettext
 
     # =============================================================================
     
-    def help_stop
-        puts "Use 'help <subcommand>' for help on a specific subcommand" 
+    def translate
+        if ARGV.length == 0
+            puts "No language given to translate."
+            self.help_stop(:translate)
+        end
+    end
+    
+    # =============================================================================
+    
+    def help_stop(subcommand=nil)
+        if subcommand == nil
+            puts "Use 'help <subcommand>' for help on a specific subcommand" 
+        else
+            self.print_help(subcommand)
+        end
         exit
     end
 
@@ -214,15 +234,19 @@ class ToGettext
                 puts "#{" "*4} #{desc[:inline]}" 
             }
         elsif @subcommands.has_key? ARGV[0].intern
-            @subcommands[ARGV[0].intern][:help].split("\n").each { |line|
-                puts " "*4+line
-            }
+            self.print_help(ARGV[0].intern)
         else
             puts "Unknown help topic \"#{ARGV.shift}\""
             self.help
         end
     end
-    
+   
+    def print_help(subcommand)
+        @subcommands[subcommand][:help].split("\n").each { |line|
+            puts " "*4+line
+        }
+    end
+
     # =============================================================================
     
     def version
