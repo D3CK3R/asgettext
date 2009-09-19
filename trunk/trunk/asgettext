@@ -29,8 +29,11 @@ class ToGettext
                            :help,   "Creates the .mo files from all the .pot files. That is what you finally will\n"+
                                     "distribute on your server."],
             
-            :translate,Hash[:inline,"translate <lang>    auto translate using google",
-                            :help,  "Translates the .po file for the given language using "]
+            :translate, Hash[:inline, "translate <lang>    auto translate using google",
+                            :help,    "Translates the .po file for the given language using "],
+
+            :clean,     Hash[:inline, "clean <lang>        remove all translations",
+                             :help,   "Removes all the translations from a po file."]
         ]
         @script_location = File.dirname __FILE__
     end
@@ -129,10 +132,10 @@ class ToGettext
         self.parse_dest_dir
         # check if we are in a flex dir
         if not Dir['*'].member? 'src'
-            puts "This not a valid flex / actionscript project folder"
-            puts "   'src' Folder doesn't exist"
-            puts "    - use the '--dest' option to specify another destination folder"
-            puts "    - chane to a flex-project folder and systemute the script there"
+            $stderr.puts "This not a valid flex / actionscript project folder"
+            $stderr.puts "   'src' Folder doesn't exist"
+            $stderr.puts "    - use the '--dest' option to specify another destination folder"
+            $stderr.puts "    - chane to a flex-project folder and systemute the script there"
             self.help_stop
         end 
     end
@@ -158,10 +161,10 @@ class ToGettext
 
     def check_dest_dir
         if not File.exist? self.dest
-            puts "Folder '#{self.dest}' doesn't exist!"
+            $stderr.puts "Folder '#{self.dest}' doesn't exist!"
             self.help_stop
         elsif not File.directory? self.dest
-            puts "Given destination '#{self.dest}' is a file not a folder!"
+            $stderr.puts "Given destination '#{self.dest}' is a file not a folder!"
             self.help_stop
         end
     end
@@ -179,16 +182,16 @@ class ToGettext
     
     def add
         if ARGV.length == 0
-            puts "No language provided. \n use: togettext help"
+            $stderr.puts "No language provided. \n use: togettext help"
             self.help_stop(:add)
         elsif ARGV[0].length > 2
-            puts "'#{ARGV[0]}' is not a valid language identifier!"
+             $stderr.puts "'#{ARGV[0]}' is not a valid language identifier!"
             self.help_stop(:add)
         end
         self.create_translation_dir ARGV[0]
         if not self.po_exists?
-            puts "messages.po doesn't exist yet!"
-            puts "use 'togettext update' to update the messages.po and the translation files"
+            $stderr.puts "messages.po doesn't exist yet!"
+            $stderr.puts "use 'togettext update' to update the messages.po and the translation files"
             self.help_stop
         end
     end
@@ -202,7 +205,7 @@ class ToGettext
 
     def check_for_existing_translation(lang)
         if self.translation_dir_exist? lang and self.translation_pot_exist? lang
-            puts "Translation for language='#{lang}' exists already!"
+             $stderr.puts "Translation for language='#{lang}' exists already!"
             exit 1
         end
     end
@@ -217,7 +220,6 @@ class ToGettext
         # create the files with the standard translation en
         system("msginit --no-wrap --no-translator --locale=en \
                         --input=#{inputFile} --output=#{outputFile}")
-        self.translate(lang)
     end
 
     def translation_pot_exist?(lang)
@@ -227,11 +229,28 @@ class ToGettext
     def get_pot(lang)
         self.dest+"locale/"+lang+"/LC_MESSAGES/messages.pot"
     end
+
+    # =============================================================================
+
+    def clean()
+        if ARGV.length == 0
+             $stderr.puts "No language given."
+             self.stop_help :clean
+        end
+        lang = ARGV[0]
+        self.check_for_language_files lang
+
+        print "Do you really want to remove all translations for #{lang} [y,N]? "
+        exit if not $stdin.gets.chomp.downcase == "y"
+        File.delete self.get_pot(lang)
+        self.add
+    end
+
     # =============================================================================
     
     def translate(lang=nil)
         if not lang.nil? and ARGV.length == 0
-            puts "No language given to translate."
+            $stderr.puts "No language given to translate."
             self.help_stop :translate
         end
         lang = ARGV[0] if lang.nil?
@@ -243,8 +262,8 @@ class ToGettext
 
     def check_for_language_files(lang)
         if not self.translation_pot_exist? lang
-            puts "    No translation available for \"#{lang}\""
-            puts "    use \"#{$0} #{lang}\""
+            $stderr.puts "    No translation available for \"#{lang}\"."
+            $stderr.puts "    use \"#{$0} add #{lang}\" to create a new translation"
             exit 1
         end
     end
@@ -271,7 +290,7 @@ class ToGettext
         elsif @subcommands.has_key? ARGV[0].intern
             self.print_help(ARGV[0].intern)
         else
-            puts "Unknown help topic \"#{ARGV.shift}\""
+            $stderr.puts "Unknown help topic \"#{ARGV.shift}\""
             self.help
         end
     end
