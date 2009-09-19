@@ -82,8 +82,7 @@ class ToGettext
                         --language=Python --no-wrap \
                         --output=#{outputFile} --files-from=#{gettextFileList}")
             
-        # make sure we enforce UFT-8!
-        # TODO
+        # TODO make sure we enforce UFT-8!
 
         # cleanup tmp files
         File.delete gettextFileList
@@ -218,7 +217,7 @@ class ToGettext
         inputFile  = self.dest+"messages.po"
         outputFile =  self.get_pot lang
         # create the files with the standard translation en
-        system("msginit --no-wrap --no-translator --locale=en \
+        system("msginit --no-wrap --no-translator \
                         --input=#{inputFile} --output=#{outputFile}")
     end
 
