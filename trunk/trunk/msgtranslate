@@ -3,10 +3,85 @@
 require 'optparse'
 
 
-class msgtranslate
+class MsgTranslate
+    
+    attr_accessor :input, :output, :translate_all, :lang_to, :lang_from
 
-    def initialize()
+    def initialize(lang_from="en", input=nil, output=nil)
+        @lang_from = lang_from
+        @input     = input
+        @output    = output
+        @translate_all = false
+    end
 
+    def translate_all?
+        @translate_all
+    end
+
+    def parse(args)
+        opts = OptionParser.new { |opts|
+            opts.banner = "Usage: #{File.basename($0)} [OPTIONS] [FROM] TO INPUTFILE" 
+            opts.separator ""
+            
+            opts.separator "In-/Output options:"
+            opts.separator "If no file or '-' is given stdin/stdout will be taken."
+            opts.on("-i", "--input=[INPUTFILE]", "Set the input file.") { |input|
+                @input = input    
+            }
+            opts.on("-o", "--output=[OUTPUTFILE]") { |output|
+                @output = output
+            }
+            opts.separator "Other options:"
+            opts.on("-a", "--[no-]all=[ALL]", 
+                    "Replace all msgstr with translated msgid's") { |all|
+                @translate_all = all
+            }
+            opts.on("--from=[LANG]", "Translate from LANG.") { |lang|
+                @lang_from = lang
+            }
+            opts.on("--to=[LANG]", "Translate to LANG.") { |lang|
+                @lang_to = lang
+            }
+            opts.on_tail("-h", "--help", "Show this message") {
+              puts opts
+              exit
+            }
+            opts.on_tail("--version", "Show version") {
+              puts OptionParser::Version.join('.')
+              exit
+            }
+        }
+        unprocessed = opts.parse!(args)
+        if unprocessed.empty? and @lang_to.nil?
+            
+        end
+        @lang_from = unprocessed.shift if unprocessed.length > 1
+        @lang_to   = unprocessed.shift if unprocessed.length > 0
+        if unprocessed.length > 0 and @input.nil?
+            @input = unprocessed.shift
+        end
+    end
+
+    def translate!
+        input = @input
+        output = @output
+        if input == $stdin or input.nil?
+            input = "-"
+        end
+        if output == $stdout or output.nil?
+            output = "-"
+        end
+        if self.translate_all?
+            system("msginit --input=#{input} -o '-' --no-translator --locale=en")
+            exit
+            system("msginit --input=#{input} -o - --no-translator --locale=en | \
+                    msgfilter --output #{output} --keep-header \
+                    ./translate #{@lang_from} #{@lang_to}")
+        else       
+            system("msgen #{input} | \
+                    msgfilter --output #{output} --keep-header \
+                    ./translate #{@lang_from} #{@lang_to}")
+        end
     end
 
 end
@@ -15,13 +90,8 @@ end
 
 # ============================================================================
 
-
-if $0 == __FILE__
-
-options = {}
-
-OptionParser.new { |opts|
-    opts.banner = "Usage: msgtranslat FROM TO [OPTION] INPUTFILE"   
-}.parse!
-
+if $0 == __FILE__    
+    translate = MsgTranslate.new
+    translate.parse(ARGV)
+    translate.translate!
 end
