@@ -32,6 +32,7 @@ class ToGettext
             :translate,Hash[:inline,"translate <lang>    auto translate using google",
                             :help,  "Translates the .po file for the given language using "]
         ]
+        @script_location = File.dirname __FILE__
     end
 
     # ========================================================================
@@ -69,13 +70,14 @@ class ToGettext
         # write file list
         gettextFileList = self.dest+"gettext_input.list"
         gettext         = File.new(gettextFileList, 'w')
-        tmpFiles.each { |path| gettext.puts path }
+        gettext.print tmpFiles.join("\n")
         gettext.close
 
         # run gettext
         outputFile      = self.dest+"messages.po"
-        system("xgettext --extract-all --force-po --from-code=utf-8 --language=Python \
-                        --no-wrap --output=#{outputFile} --files-from=#{gettextFileList}")
+        system("xgettext --extract-all --force-po --from-code=utf-8 \
+                        --language=Python --no-wrap \
+                        --output=#{outputFile} --files-from=#{gettextFileList}")
             
         # make sure we enforce UFT-8!
         # TODO
@@ -98,7 +100,8 @@ class ToGettext
                 self.create_translation_pot( path.match(/.*?\/locale\/([a-z_]{2})\/.*/)[1] )
             end
             # merge the changes in messages.po to the pot translator file
-            system("msgmerge --force-po --update --backup=numbered --no-wrap #{destFile} #{srcFile}")
+            system("msgmerge --force-po --update --backup=numbered --no-wrap \
+                              #{destFile} #{srcFile}")
         }
     end
 
@@ -198,9 +201,9 @@ class ToGettext
     end
 
     def check_for_existing_translation(lang)
-        if self.translation_dir_exist? lang
+        if self.translation_dir_exist? lang and self.translation_pot_exist? lang
             puts "Translation for language='#{lang}' exists already!"
-            self.help_stop
+            exit 1
         end
     end
 
@@ -214,7 +217,7 @@ class ToGettext
         # create the files with the standard translation en
         system("msginit --no-wrap --no-translator --locale=en \
                         --input=#{inputFile} --output=#{outputFile}")
-        self.translate 
+        self.translate(lang)
     end
 
     def translation_pot_exist?(lang)
@@ -226,21 +229,23 @@ class ToGettext
     end
     # =============================================================================
     
-    def translate
-        if ARGV.length == 0
+    def translate(lang=nil)
+        if not lang.nil? and ARGV.length == 0
             puts "No language given to translate."
             self.help_stop :translate
         end
-        lang = ARGV[0]
-        self.check_for_language_files lang
-        system("msgtranslate --input=#{self.get_pot lang} \
-                             --output#{self.get_pot lang} #{lang}")
+        lang = ARGV[0] if lang.nil?
+        self.check_for_language_files lang 
+        system("#{@script_location}/msgtranslate \
+                    --input=#{self.get_pot lang} \
+                    --output=#{self.get_pot lang} #{lang}")
     end
 
     def check_for_language_files(lang)
         if not self.translation_pot_exist? lang
             puts "    No translation available for \"#{lang}\""
             puts "    use \"#{$0} #{lang}\""
+            exit 1
         end
     end
     

@@ -12,6 +12,7 @@ class MsgTranslate
         @input     = input
         @output    = output
         @translate_all = false
+        @script_location = File.dirname __FILE__
     end
 
     def translate_all?
@@ -72,15 +73,15 @@ class MsgTranslate
             output = "-"
         end
         if self.translate_all?
-            system("msginit --input=#{input} -o '-' --no-translator --locale=en")
-            exit
-            system("msginit --input=#{input} -o - --no-translator --locale=en | \
+            system("msgconv -t utf-8 #{input} | \
+                    msginit -o - --no-translator --locale=en | \
                     msgfilter --output #{output} --keep-header \
-                    ./translate #{@lang_from} #{@lang_to}")
+                    #{@script_location}/translate #{@lang_from} #{@lang_to}")
         else       
-            system("msgen #{input} | \
+            system("msgconv -t utf-8 #{input}| \
+                    msgen - | \
                     msgfilter --output #{output} --keep-header \
-                    ./translate #{@lang_from} #{@lang_to}")
+                    #{@script_location}/translate #{@lang_from} #{@lang_to}")
         end
     end
 
