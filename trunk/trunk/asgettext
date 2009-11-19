@@ -54,7 +54,7 @@ class ToGettext
         end
         # create intermediate files for parsing with gettext
         ARGV.each { |fileType|
-            Dir[@dest+'/src/**/*.'+fileType].each { |path|
+            Dir[Pathname.new('.').realpath.to_s + '/src/**/*.'+fileType].each { |path|
                 infile = File.new(path, 'r')
                 outfile = File.new(path+".pox", 'w')
                 tmpFiles.push path+".pox"
@@ -62,9 +62,10 @@ class ToGettext
                     # feed a normal assignment
                     # TODO add parenthesis counting check here
                     # TODO add multiple matches per line
-                    if line =~ /(_\(.*?\))/
-                        outfile.puts $~[1]
-                    end
+					#multiple matches per line
+					line.scan(/(_\(.*?\))/).each { |token|
+                        outfile.puts token
+					}
                 }
                 outfile.close
             }
@@ -114,7 +115,7 @@ class ToGettext
     # =============================================================================
     
     def init
-        self.create_dir_if_not_exist self.dest+"/translation"
+        self.create_dir_if_not_exist self.dest
         self.create_dir_if_not_exist self.dest+"locale"
         if not File.exist? self.dest+"locale/en"
             self.create_translation_dir("en")
@@ -145,8 +146,10 @@ class ToGettext
             if arg == "-d" or arg == "--dest"
                 @dest = Pathname.new(ARGV[i+1]).realpath.to_s
                 # remove these arguments from ARGV
+				# first delete the ARGV[i+1] element, because if we delete ARGV[i] first
+				# the ARGV[i+1] will "shift" on place ARGV[i].
+				ARGV.delete_at(i+1)
                 ARGV.delete_at(i)
-                ARGV.delete_at(i+1)
                 self.check_dest_dir
                 return
             end
@@ -159,10 +162,10 @@ class ToGettext
     end
 
     def check_dest_dir
-        if not File.exist? self.dest
+        if not File.exist? @dest
             $stderr.puts "Folder '#{self.dest}' doesn't exist!"
             self.help_stop
-        elsif not File.directory? self.dest
+        elsif not File.directory? @dest
             $stderr.puts "Given destination '#{self.dest}' is a file not a folder!"
             self.help_stop
         end
@@ -327,6 +330,11 @@ class ToGettext
     end
 
     def check_for_gettext
+		# disable warnings during the gettext checking, so we get only errors in
+		# stderr. Warnings can cause problems during the detection, for example
+		# ( warning: Insecure world writable dir /some/path in PATH, mode 040777 )
+		@warn = $-v
+		$-v = nil
         ['xgettext', 'msginit', 'msgfmt', 'msgmerge'].each{ |command|
             Open3.popen3(command+' --help') { |stdin, stdout, stderr|
                 if stderr.read.length > 0
@@ -344,6 +352,7 @@ class ToGettext
                 end
             }
         }
+		$-v = @warn
     end
 end
 
